@@ -1,0 +1,118 @@
+import uuid
+from datetime import datetime
+
+class MenuItem:
+    def __init__(self, name, price):
+        self.name = name
+        self.price = price
+
+class Order:
+    def __init__(self, customer_name):
+        self.order_id = str(uuid.uuid4())[:8]
+        self.customer_name = customer_name
+        self.items = []
+        self.timestamp = datetime.now()
+
+    def add_item(self, menu_item, quantity=1):
+        self.items.append((menu_item, quantity))
+
+    def calculate_total(self):
+        return sum(item.price * quantity for item, quantity in self.items)
+
+    def display_order(self):
+        print(f"\nOrder ID: {self.order_id}")
+        print(f"Customer: {self.customer_name}")
+        print(f"Timestamp: {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+        print("Items Ordered:")
+        for item, quantity in self.items:
+            print(f"{item.name} (x{quantity}): ₹{item.price * quantity}")
+        print(f"Total Amount Due: ₹{self.calculate_total():.2f}")
+        print("----------------------------")
+
+class Canteen:
+    def __init__(self):
+        self.menu = {
+            "Sandwich": MenuItem("Sandwich", 50),
+            "Pasta": MenuItem("Pasta", 70),
+            "Burger": MenuItem("Burger", 80),
+            "Fries": MenuItem("Fries", 40),
+            "Coffee": MenuItem("Coffee", 30),
+            "Tea": MenuItem("Tea", 20),
+            "Juice": MenuItem("Juice", 35),
+        }
+        self.orders = []
+
+    def display_menu(self):
+        print("----- Menu -----")
+        for name, item in self.menu.items():
+            print(f"{name}: ₹{item.price}")
+        print("----------------")
+
+    def take_order(self, customer_name):
+        order = Order(customer_name)
+        print("\nEnter the name of the item you want to order (type 'done' to finish):")
+        while True:
+            item_name = input("Item: ")
+            if item_name.lower() == 'done':
+                break
+            elif item_name in self.menu:
+                quantity = int(input(f"Quantity of {item_name}: "))
+                order.add_item(self.menu[item_name], quantity)
+                print(f"{item_name} (x{quantity}) added to your order.")
+            else:
+                print("This item is not on the menu. Please choose again.")
+        if order.items:
+            self.orders.append(order)
+            order.display_order()
+            return order
+        else:
+            print("No items were ordered.")
+            return None
+
+    def view_order_history(self):
+        if not self.orders:
+            print("No orders have been placed yet.")
+        else:
+            print("\n----- Order History -----")
+            for order in self.orders:
+                order.display_order()
+
+    def process_payment(self, order):
+        print(f"Processing payment for Order ID: {order.order_id}")
+        print(f"Total Amount Due: ₹{order.calculate_total():.2f}")
+        payment_amount = float(input("Enter payment amount: "))
+        if payment_amount >= order.calculate_total():
+            print("Payment successful!")
+            change = payment_amount - order.calculate_total()
+            if change > 0:
+                print(f"Change to be returned: ₹{change:.2f}")
+        else:
+            print("Insufficient payment. Please try again.")
+
+def main():
+    canteen = Canteen()
+    
+    while True:
+        print("\n1. View Menu")
+        print("2. Place an Order")
+        print("3. View Order History")
+        print("4. Exit")
+        choice = input("Choose an option: ")
+        
+        if choice == '1':
+            canteen.display_menu()
+        elif choice == '2':
+            customer_name = input("Enter your name: ")
+            order = canteen.take_order(customer_name)
+            if order:
+                canteen.process_payment(order)
+        elif choice == '3':
+            canteen.view_order_history()
+        elif choice == '4':
+            print("Thank you for visiting the canteen!")
+            break
+        else:
+            print("Invalid choice, please try again.")
+
+if __name__ == "__main__":
+    main()
